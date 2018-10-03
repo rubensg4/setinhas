@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="All.css">
+    <title>Quem Somos</title>
+</head>
+<body>
+<div class="logos">
+    <img src="imgs/Header.png">
+</div>
+<div class="container red topBotomBordersIn">
+    <a href="Home.html">HOME</a>
+    <a href="comojogar.html">COMO JOGAR</a>
+    <a href="Quemsomos.html">QUEM SOMOS</a>
+    <a href="DIY.html">DIY</a>
+</div>
+<br>
+    <pre>
+<p>Abaixo se encontra o nosso código comentado, cada variável é explicada nos comentários escritos em azul</p>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d");
+    var fonts = ["arcadeclassicregular"] <p>Variável necessária para utilizar uma fonte externa no jogo</p>
+
+    var tecla = 0;      <p>//variável necessária para armazenar o que for digitado</p>
+
+    var lastSpawn = -1;     <p>//valor inicial para criar o primeiro projétil, é negativo para ser acionado logo no inicio</p>
+
+    var spawnRate = 2000;       <p>//tempo de intervalo entre projéteis</p>
+    var velocidade = 1;     <p>//velocidade no qual os projéteis se movem</p>
+
+    var scoreframe = 0;     <p>//serve como contador de tempo para definir como o score será aumentado</p>
+    var score = 0;      <p>//aumenta a cada quantidade determinada de scoreframe</p>
+
+    var vida = 3;       <p>//vida máxima do jogador</p>
+
+    var setas = [];     <p>//lista onde será armazenado todos os projéteis</p>
+
+    <p>//variáveis de todas as imagens que serão utilizadas</p>
+    var imagem_coracao = new Image();
+    imagem_coracao.src = 'coracao.png';
+
+    var arrow_up = new Image();
+    arrow_up.src = 'arrow-up.png';
+
+    var arrow_down = new Image();
+    arrow_down.src = 'arrow-down.png';
+
+    var arrow_left = new Image();
+    arrow_left.src = 'arrow-left.png';
+
+    var arrow_right = new Image();
+    arrow_right.src = 'arrow-right.png';
+
+    var arrow_up_red = new Image();
+    arrow_up_red.src = 'arrow-up-red.png';
+
+    var arrow_down_red = new Image();
+    arrow_down_red.src = 'arrow-down-red.png';
+
+    var arrow_left_red = new Image();
+    arrow_left_red.src = 'arrow-left-red.png';
+
+    var arrow_right_red = new Image();
+    arrow_right_red.src = 'arrow-right-red.png';
+
+    <p>//desabilita a função de mover a página no navegador pelas setas, já que será utilizado no jogo</p>
+    window.addEventListener("keydown", function(e) {
+    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+    e.preventDefault();
+    }
+    }, false);
+
+    <p>//captura o que for digitado e armazena na variável "tecla"</p>
+    document.addEventListener("keydown", function(evento) {
+    tecla = evento.keyCode;
+    });
+
+    <p>//função principal do jogo</p>
+    function desenha() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    var time = Date.now();      <p>//registra quantos milisegundos se passaram desde a data 01/01/1970</p>
+
+    desenhos_fixos();       <p>//função que desenha tudo aquilo que é constante e imutável no canvas</p>
+
+    teclado();      <p>//gerencia as ações a serem realizadas a partir da tecla pressionada</p>
+
+    <p>//compara se o tempo atual é maior que o tempo do último projétil + o intervalo entre eles,</p>
+    <p>como o valor inicial é -1, será acionado logo no primeiro frame</p>
+    if (time > (lastSpawn + spawnRate)) {
+    lastSpawn = time;       <p>//atualiza sempre qual a hora que o projétil foi gerado, para a nova comparação</p>
+    seta_random();      <p>//função responsável por gerar um projétil</p>
+    }
+
+    fisica();       <p>//função responsável por toda atualização de posição e colisão</p>
+
+    scorecount();       <p>//função responsável por mostrar e contar a pontuação</p>
+    lifecount();        <p>//função responsável por mostrar e contar a quantidade de vidas</p>
+    }
+
+    function desenhos_fixos() {
+    <p>//o coração representa o seu personagem</p>
+    ctx.drawImage(imagem_coracao, 241.66, 241.66, 16.66, 16.66);
+
+    <p>//os 4 desenhos representam a cabine branca no qual está posicionado o personagem</p>
+    ctx.fillStyle = "white";
+    ctx.fillRect(213.88, 213.88, 5.55, 72.22);
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(280.55, 213.88, 5.55, 72.22);
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(213.88, 213.88, 72.22, 5.55);
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(213.88, 280.55, 72.22, 5.55);
+
+    }
+
+    function teclado() {
+
+    <p>//posicionamento do escudo do personagem de acordo com a tecla apertada</p>
+    if (tecla === 39) {
+    ctx.fillStyle = "blue";
+    ctx.fillRect(275, 222.22, 2.77, 55.55);
+    }
+
+    else if(tecla === 37){
+    ctx.fillStyle = "blue";
+    ctx.fillRect(222.22, 222.22, 2.77, 55.55);
+    }
+    else if(tecla === 38){
+    ctx.fillStyle = "blue";
+    ctx.fillRect(222.22, 222.22, 55.55, 2.77);
+
+    }
+    else if(tecla === 40){
+    ctx.fillStyle = "blue";
+    ctx.fillRect(222.22, 275, 55.55, 2.77);
+    }
+    }
+
+    function seta_random (){
+    var random = Math.floor(Math.random() * 5) + 1;     <p>//gera um valor aleatório de 1 a 5</p>
+    var novo = 0;       <p>//variável onde será armazenado qual será será criada</p>
+
+    <p>//gera o projétil de acordo com o valor, a variável "tipo" serve para o programa saber em qual direção foi gerada</p>
+    <p>//armazena as dimensões e o tipo de projétil na variável "novo" e adiciona à lista "setas"</p>
+    if (random === 1){
+    novo = {x: 241.66, y: 0, altura: 16.66, largura: 16.66, tipo: 1};
+    setas.push(novo);
+    }
+    else if (random === 2){
+    novo = {x: 0, y:  241.66, altura: 16.66, largura: 16.66, tipo: 2};
+    setas.push(novo);
+    }
+    else if (random === 3){
+    novo = {x:  241.66, y: 483.33, altura: 16.66, largura: 16.66, tipo: 3};
+    setas.push(novo);
+    }
+    else if (random === 4){
+    novo = {x: 483.33, y:  241.66, altura: 16.66, largura: 16.66, tipo: 4};
+    setas.push(novo);
+    }
+    <p>//caso o valor seja 5 não será gerado nenhum projétil</p>
+    }
+
+    function fisica(){
+    for (var i = 0; i < setas.length; i++) { <p>//percorre todos os elementos da lista "setas"</p>
+    var object = setas[i];
+
+    if (object.tipo ===1){               <p>//caso o tipo seja 1 (cima)</p>
+    object.y += velocidade;          <p>//soma a velocidade ao valor do y, para descer</p>
+    if (object.y + 16.66 >= 222.22){ <p>//verifica se o projétil chegou à cabine do personagem</p>
+    if (tecla === 38){           <p>//verifica se o escudo está posicionado nessa direção pela variável "tecla"</p>
+    setas.splice(i,1);       <p>//caso o escudo seteja nessa direção, exclui o projétil da lista</p>
+    }
+    else {                       <p>//caso o escudo não esteja nessa direção, exclui o projétil da lista e aplica o dano</p>
+    setas.splice(i,1);
+    dano();
+    }
+    }
+
+    <p>//verifica se o projétil é o mais próximo do personagem pela posição da lista. Caso sim, carrega a imagem vermelha.</p>
+    <p>Se não for, carrega a azul</p>
+    if (i !== 0){
+    ctx.drawImage(arrow_down, object.x, object.y, object.largura, object.altura);
+    }
+    else{
+    ctx.drawImage(arrow_down_red, object.x, object.y, object.largura, object.altura);
+    }
+    }
+
+    else if (object.tipo ===3){         <p>//caso o tipo seja 3 (baixo)</p>
+    object.y -= velocidade;         <p>//subtrai a velocidade ao valor do Y, para subir</p>
+    if (object.y <= 275){           <p>//verifica se o projétil chegou à cabine do personagem</p>
+    if (tecla === 40){          <p>//verifica se o escudo está posicionado nessa direção pela variável "tecla"</p>
+    setas.splice(i,1);      <p>//caso o escudo seteja nessa direção, exclui o projétil da lista</p>
+    }
+    else {                      <p>//caso o escudo não esteja nessa direção, exclui o projétil da lista e aplica o dano</p>
+    setas.splice(i,1);
+    dano();
+    }
+    }
+
+    <p>//verifica se o projétil é o mais próximo do personagem pela posição da lista. Caso sim, carrega a imagem vermelha.</p>
+    <p>Se não for, carrega a azul</p>
+    if (i !== 0){
+    ctx.drawImage(arrow_up, object.x, object.y, object.largura, object.altura);
+    }
+    else{
+    ctx.drawImage(arrow_up_red, object.x, object.y, object.largura, object.altura);
+    }
+    }
+
+    else if (object.tipo ===2){           <p>//caso o tipo seja 2 (esquerda)</p>
+    object.x += velocidade;           <p>//soma a velocidade ao valor do X, para ir para a direita</p>
+    if (object.x + 16.66 >= 222.22){  <p>//verifica se o projétil chegou à cabine do personagem</p>
+    if (tecla === 37){            <p>//verifica se o escudo está posicionado nessa direção pela variável "tecla"</p>
+    setas.splice(i,1);        <p>//caso o escudo seteja nessa direção, exclui o projétil da lista</p>
+    }
+    else {                        <p>//caso o escudo não esteja nessa direção, exclui o projétil da lista e aplica o dano</p>
+    setas.splice(i,1);
+    dano();
+    }
+    }
+
+    <p>//verifica se o projétil é o mais próximo do personagem pela posição da lista. Caso sim, carrega a imagem vermelha.
+    <p>Se não for, carrega a azul</p>
+    if (i !== 0){
+    ctx.drawImage(arrow_right, object.x, object.y, object.largura, object.altura);
+    }
+    else{
+    ctx.drawImage(arrow_right_red, object.x, object.y, object.largura, object.altura);
+    }
+    }
+
+    else if (object.tipo ===4){     <p>//caso o tipo seja 4 (direita)</p>
+    object.x -= velocidade;     <p>//subtrai a velocidade ao valor do X, para ir para a esquerda</p>
+    if (object.x <= 275){      <p>//verifica se o projétil chegou à cabine do personagem</p>
+    if (tecla === 39){    <p>//verifica se o escudo está posicionado nessa direção pela variável "tecla"</p>
+    setas.splice(i,1); <p>//caso o escudo seteja nessa direção, exclui o projétil da lista</p>
+    }
+    else {
+    setas.splice(i,1); <p>//caso o escudo não esteja nessa direção, exclui o projétil da lista e aplica o dano</p>
+    dano();
+    }
+    }
+
+    <p>//verifica se o projétil é o mais próximo do personagem pela posição da lista. Caso sim, carrega a imagem vermelha. </p>
+    <p>Se não for, carrega a azul</p>
+    if (i !== 0){
+    ctx.drawImage(arrow_left, object.x, object.y, object.largura, object.altura);
+    }
+    else{
+    ctx.drawImage(arrow_left_red, object.x, object.y, object.largura, object.altura);
+    }
+    }
+
+    }
+
+    }
+
+    function scorecount() {
+    scoreframe++;       <p>//aumenta 1 ao scoreframe toda vez que o frame é atualizado</p>
+
+    if (scoreframe % 5 === 0){      <p>//a cada 5 frames aumenta em 1 o score</p>
+    score++;
+    }
+
+    if (score % 5 === 0){      <p>//a cada 5 de score aumenta a velocidade dos projéteis e diminui o intervalo entre eles</p>
+    spawnRate -= 0.8;
+    velocidade += 0.0006;
+    }
+
+    <p>//mostra o score no canvas</p>
+    ctx.fillStyle = "red";
+    ctx.font = "16.66px arcadeclassicregular";
+    ctx.textAlign = "start";
+    ctx.fillText("Score: "+score,375,16.66);
+
+    }
+
+    function lifecount(){
+    <p>//mostra a vida no canvas</p>
+    ctx.fillStyle = "red";
+    ctx.font = "16.66px arcadeclassicregular";
+    ctx.textAlign = "start";
+    ctx.fillText("Vida: "+vida+"/3",27.77,16.66);
+
+    if (vida === 0){        <p>//verifica se o jogador esgotou a quantidade de vidas</p>
+    tecla = 0;      <p>//caso sim, reseta a variável tecla para não acionar o jogo novamente sem a escolha do jogador</p>
+    requestAnimationFrame(gameover);        <p>//função responsável por mostrar as considerações finais e resetar o jogo</p>
+    }
+    else {
+    requestAnimationFrame(desenha);     <p>//se o jogador não esgotou as vidas, executa mais uma vez a função principal</p>
+    }
+    }
+
+    function dano(){
+    vida -= 1;      <p>//diminui em 1 a quantidade de vidas</p>
+
+    <p>//faz o canvas piscar em vermelho para que o jogador seja notificado do dano</p>
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "red";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    }
+
+    function inicio(){
+    if (tecla !== 0){       //verifica se alguma tecla foi pressionada</p>
+    requestAnimationFrame(desenha);     //caso sim, executa a função principal</p>
+    }
+    else{       <p>//caso não, exibe a mensagem "Pressione  qualquer  tecla  para  iniciar" no centro do canvas e executa</p>
+    <p>mais uma vez essa função</p>
+    ctx.fillStyle = "red";
+    ctx.font = "16.66px arcadeclassicregular";
+    ctx.textAlign = "center";
+    ctx.fillText("Pressione  qualquer  tecla  para  iniciar",250,250);
+
+    requestAnimationFrame(inicio);
+    }
+    }
+
+    function gameover(){
+    <p>//caso o jogador tenha esgotado a quantidade de vidas e apertado alguma tecla reseta as variáveis e inicia a função principal</p>
+    if (tecla !== 0){
+    scoreframe = 0;
+    score = 0;
+    spawnRate = 3000;
+    velocidade = 1;
+    vida = 3;
+    setas = [];
+
+    requestAnimationFrame(desenha);
+    }
+
+        <p>//caso não, notifica ao jogador que esgotou a quantidade de vidas, exibe a pontuação e a mensagem e notifica</p>
+    <p>para pressionar uma tecla para reiniciar</p>
+    else {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "red";
+    ctx.font = "33.33px arcadeclassicregular";
+    ctx.textAlign = "center";
+    ctx.fillText("GAME OVER",250,125);
+
+    ctx.fillStyle = "red";
+    ctx.font = "16.66px arcadeclassicregular";
+    ctx.textAlign = "center";
+    ctx.fillText("SCORE: "+score,250,250);
+
+    ctx.fillStyle = "red";
+    ctx.font = "16.66px arcadeclassicregular";
+    ctx.textAlign = "center";
+    ctx.fillText("Pressione  qualquer  tecla  para  reiniciar",250,375);
+
+    requestAnimationFrame(gameover);
+    }
+    }
+
+
+    requestAnimationFrame(inicio);      <p>//função utilizada para fazer o jogador precisar apertar uma tecla para iniciar o jogo</p></pre></div>
+</body>
+
+<script type="text/javascript" src="Jogo.js"></script>
+</html>
